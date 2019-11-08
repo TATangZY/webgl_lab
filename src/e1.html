@@ -1,6 +1,8 @@
+<!DOCTYPE html>
 <html>
 
 <head>
+    <meta charset="utf-8">
     <title>My first three.js app</title>
     <style>
         body {
@@ -11,11 +13,52 @@
             width: 100%;
             height: 100%
         }
+
+        .divcss5{text-align:center} 
     </style>
 </head>
 
 <body>
+    <div class="divcss5">press left or right to change the material of the cube</div>
+
     <script src="../js/three.js"></script>
+
+    <script id="fragment_shader1" type="x-shader/x-fragment">
+        uniform float time;
+		varying vec2 vUv;
+		void main(void) {
+            vec2 position = - 1.0 + 2.0 * vUv;
+ 
+            float red = abs( sin( position.x * position.y + time / 5.0 ) );
+            float green = abs( sin( position.x * position.y + time / 4.0 ) );
+            float blue = abs( sin( position.x * position.y + time / 3.0 ) );
+            gl_FragColor = vec4( red, green, blue, 1.0 );
+        }
+    </script>
+
+    <script id="fragment_shader2" type="x-shader/x-fragment">
+        uniform float time;
+        varying vec2 vUv;
+        void main( void ) {
+            vec2 position = vUv;
+            float color = 0.0;
+            color += sin( position.x * cos( time / 15.0 ) * 80.0 ) + cos( position.y * cos( time / 15.0 ) * 10.0 );
+            color += sin( position.y * sin( time / 10.0 ) * 40.0 ) + cos( position.x * sin( time / 25.0 ) * 40.0 );
+            color += sin( position.x * sin( time / 5.0 ) * 10.0 ) + sin( position.y * sin( time / 35.0 ) * 80.0 );
+            color *= sin( time / 10.0 ) * 0.5;
+            gl_FragColor = vec4( vec3( color, color * 0.5, sin( color + time / 3.0 ) * 0.75 ), 1.0 );
+        }
+    </script>
+
+    <script id="vertexShader" type="x-shader/x-vertex">
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    </script>
+
     <script>
         var scene = new THREE.Scene();
         var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -25,22 +68,56 @@
         document.body.appendChild(renderer.domElement);
 
         var geometry = new THREE.BoxGeometry(1, 1, 1);
-        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+        var uniform1 = {
+            time: {
+                value: 1.0
+            }
+        };
+        var params = uniform1;
+        var material = new THREE.ShaderMaterial({
+            uniforms: params,
+            vertexShader: document.getElementById('vertexShader').textContent,
+            fragmentShader: document.getElementById('fragment_shader1').textContent
+        });
         var cube = new THREE.Mesh(geometry, material);
+        cube.material.needsUpdate = true;
         scene.add(cube);
 
         camera.position.z = 5;
 
+        var flag = 1;
         var animate = function () {
             requestAnimationFrame(animate);
 
             cube.rotation.x += 0.01;
             cube.rotation.y += 0.01;
 
+            document.addEventListener("keydown", changeMaterial);
+
             renderer.render(scene, camera);
         };
 
         animate();
+
+        function changeMaterial(e) {
+            if (e) {
+                var keynum = e.keyCode;
+                if (keynum == 37 || keynum == 39) {
+                    if (flag == 1) {
+                        var newMaterial = new THREE.ShaderMaterial({
+                            uniforms: uniform1,
+                            vertexShader: document.getElementById('vertexShader').textContent,
+                            fragmentShader: document.getElementById('fragment_shader2').textContent
+                        });
+                        cube.material = newMaterial;
+                        flag = 0;
+                    } else if (flag == 0) {
+                        cube.material = material;
+                        flag = 1;
+                    }
+                }
+            }
+        }
     </script>
 </body>
 
