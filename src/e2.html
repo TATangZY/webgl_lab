@@ -23,7 +23,10 @@
 <body>
     <script src="../js/three.js"></script>
     <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="../js/GLTFLoader.js"></script>
+<!--    <script src="https://cdn.rawgit.com/mrdoob/three.js/master/examples/js/loaders/GLTFLoader.js"></script>-->
     <script>
+
         var Leaf = function () {
             THREE.Group.apply(this, arguments);
 
@@ -483,6 +486,22 @@
         var star = new Star();
         star.position.y += 200;
         scene.add(star);
+        console.log(star);
+
+        // Add a Santa
+        let loader = new THREE.GLTFLoader().setPath('../model/');
+        loader.load('Santa.glb', function (glb) {
+            glb.scene.position.y = 0;
+            glb.scene.position.x = 120;
+            glb.scene.position.z = 0;
+            glb.scene.scale.x = 2200;
+            glb.scene.scale.y = 2200;
+            glb.scene.scale.z = 2200;
+            scene.add(glb.scene);
+            console.log('haha');
+        }, undefined, function (e) {
+            console.error(e);
+        });
 
         // Loop around the tree, adding presents every 20 to 40 degrees.
         for (var angle = 0; angle < 360; angle += Math.random() * 20 + 20) {
